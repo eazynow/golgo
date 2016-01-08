@@ -21,6 +21,9 @@ const (
 
 var instructions = []string{
 	"p    pause",
+	"s    step",
+	"r    randomize",
+	"",
 	"q    quit",
 }
 
@@ -32,16 +35,30 @@ type Field struct {
 
 // NewField returns an empty field of the specified width and height.
 func NewField(w, h int) *Field {
-	s := make([][]bool, h)
-	for i := range s {
-		s[i] = make([]bool, w)
-	}
-	return &Field{s: s, w: w, h: h}
+
+	f := Field{w: w, h: h}
+	f.Clear()
+
+	return &f
 }
 
 // Set sets the state of the specified cell to the given value.
 func (f *Field) Set(x, y int, b bool) {
 	f.s[y][x] = b
+}
+
+func (f *Field) Clear() {
+	f.s = make([][]bool, f.h)
+	for i := range f.s {
+		f.s[i] = make([]bool, f.w)
+	}
+}
+
+func (f *Field) Randomize() {
+	f.Clear()
+	for i := 0; i < (f.w * f.h / 4); i++ {
+		f.Set(rand.Intn(f.w), rand.Intn(f.h), true)
+	}
 }
 
 // Alive reports whether the specified cell is alive.
@@ -89,9 +106,9 @@ func NewLife(w, h int) (*Life, error) {
 	}
 
 	a := NewField(w, h)
-	for i := 0; i < (w * h / 4); i++ {
-		a.Set(rand.Intn(w), rand.Intn(h), true)
-	}
+
+	a.Randomize()
+
 	return &Life{
 		a: a, b: NewField(w, h),
 		w: w, h: h,
@@ -119,6 +136,10 @@ func (l *Life) Close() {
 
 func (l *Life) Pause() {
 	l.paused = !l.paused
+}
+
+func (l *Life) IsPaused() bool {
+	return l.paused
 }
 
 // Render renders the board in termbox
@@ -163,15 +184,12 @@ func (l *Life) Render() {
 	termbox.Flush()
 }
 
-func main() {
-	l, err := NewLife(80, 30)
-	if err != nil {
-		fmt.Printf("Could not start the game: %s\n", err.Error())
-		return
-	}
+func (l *Life) Randomize() {
+	l.a.Randomize()
+	l.generation = 1
+}
 
-	defer l.Close()
-
+func (l *Life) Run() {
 	eventQueue := make(chan termbox.Event)
 	go func() {
 		for {
@@ -186,6 +204,13 @@ func main() {
 				switch {
 				case ev.Ch == 'p':
 					l.Pause()
+				case ev.Ch == 's':
+					if !l.IsPaused() {
+						l.Pause()
+					}
+					l.Step()
+				case ev.Ch == 'r':
+					l.Randomize()
 				case ev.Ch == 'q' || ev.Key == termbox.KeyEsc || ev.Key == termbox.KeyCtrlC || ev.Key == termbox.KeyCtrlD:
 					return
 				}
@@ -198,6 +223,18 @@ func main() {
 			time.Sleep(time.Second / 30)
 		}
 	}
+}
+
+func main() {
+	l, err := NewLife(80, 30)
+	if err != nil {
+		fmt.Printf("Could not start the game: %s\n", err.Error())
+		return
+	}
+
+	defer l.Close()
+
+	l.Run()
 }
 
 // Function tbprint draws a string.
