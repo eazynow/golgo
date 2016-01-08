@@ -3,7 +3,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"math/rand"
@@ -125,9 +124,26 @@ func main() {
 
 	defer l.Close()
 
-	for i := 0; i < 300; i++ {
-		l.Step()
-		l.Render()
-		time.Sleep(time.Second / 30)
+	eventQueue := make(chan termbox.Event)
+	go func() {
+		for {
+			eventQueue <- termbox.PollEvent()
+		}
+	}()
+
+	for {
+		select {
+		case ev := <-eventQueue:
+			if ev.Type == termbox.EventKey {
+				switch {
+				case ev.Ch == 'q' || ev.Key == termbox.KeyEsc || ev.Key == termbox.KeyCtrlC || ev.Key == termbox.KeyCtrlD:
+					return
+				}
+			}
+		default:
+			l.Step()
+			l.Render()
+			time.Sleep(time.Second / 30)
+		}
 	}
 }
