@@ -1,13 +1,17 @@
-// An implementation of Conway's Game of Life. Updated to display in termbox
+// Googles implementation of Conway's Game of Life, updated to display in termbox.
+// For the original version see https://golang.org/doc/play/life.go
 package main
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/nsf/termbox-go"
 	"math/rand"
 	"time"
-	//	"github.com/nsf/termbox-go"
 )
+
+const backgroundColor = termbox.ColorBlue
+const cellColor = termbox.ColorWhite
 
 // Field represents a two-dimensional field of cells.
 type Field struct {
@@ -65,7 +69,12 @@ type Life struct {
 }
 
 // NewLife returns a new Life game state with a random initial state.
-func NewLife(w, h int) *Life {
+func NewLife(w, h int) (*Life, error) {
+
+	if err := termbox.Init(); err != nil {
+		return nil, err
+	}
+
 	a := NewField(w, h)
 	for i := 0; i < (w * h / 4); i++ {
 		a.Set(rand.Intn(w), rand.Intn(h), true)
@@ -73,7 +82,7 @@ func NewLife(w, h int) *Life {
 	return &Life{
 		a: a, b: NewField(w, h),
 		w: w, h: h,
-	}
+	}, nil
 }
 
 // Step advances the game by one instant, recomputing and updating all cells.
@@ -86,6 +95,10 @@ func (l *Life) Step() {
 	}
 	// Swap fields a and b.
 	l.a, l.b = l.b, l.a
+}
+
+func (l *Life) Close() {
+	termbox.Close()
 }
 
 // String returns the game board as a string.
@@ -104,11 +117,33 @@ func (l *Life) String() string {
 	return buf.String()
 }
 
+// Render renders the board in termbox
+func (l *Life) Render() {
+	termbox.Clear(backgroundColor, backgroundColor)
+
+	for y := 0; y < l.h; y++ {
+		for x := 0; x < l.w; x++ {
+			if l.a.Alive(x, y) {
+				termbox.SetCell(x, y, ' ', cellColor, cellColor)
+			}
+		}
+	}
+
+	termbox.Flush()
+}
+
 func main() {
-	l := NewLife(40, 15)
+	l, err := NewLife(80, 30)
+	if err != nil {
+		fmt.Printf("Could not start the game: %s\n", err.Error())
+		return
+	}
+
+	defer l.Close()
+
 	for i := 0; i < 300; i++ {
 		l.Step()
-		fmt.Print("\x0c", l) // Clear screen and print field.
+		l.Render()
 		time.Sleep(time.Second / 30)
 	}
 }
