@@ -9,8 +9,13 @@ import (
 	"time"
 )
 
-const backgroundColor = termbox.ColorBlue
-const cellColor = termbox.ColorWhite
+const (
+	gameBorderCol   = 2
+	gameBorderRow   = 1
+	backgroundColor = termbox.ColorBlue
+	cellColor       = termbox.ColorWhite
+	boardColor      = termbox.ColorBlack
+)
 
 // Field represents a two-dimensional field of cells.
 type Field struct {
@@ -112,9 +117,11 @@ func (l *Life) Render() {
 
 	for y := 0; y < l.h; y++ {
 		for x := 0; x < l.w; x++ {
+			color := boardColor
 			if l.a.Alive(x, y) {
-				termbox.SetCell(x, y, ' ', cellColor, cellColor)
+				color = cellColor
 			}
+			termbox.SetCell(x+gameBorderCol, y+gameBorderRow, ' ', color, color)
 		}
 	}
 
