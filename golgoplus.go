@@ -1,4 +1,4 @@
-// Googles implementation of Conway's Game of Life, updated to display in termbox.
+// Googles implementation of Conway's Game of Life, now with added features
 // For the original version see https://golang.org/doc/play/life.go
 package main
 
@@ -14,17 +14,21 @@ const (
 
 	gameBorderCol   = 2
 	gameBorderRow   = 1
+	textColor       = termbox.ColorWhite
 	backgroundColor = termbox.ColorBlue
 	cellColor       = termbox.ColorWhite
 	boardColor      = termbox.ColorBlack
 )
 
 var instructions = []string{
+	"Controls:",
+	"",
 	"p    pause",
 	"s    step",
 	"r    randomize",
 	"",
 	"q    quit",
+	"",
 }
 
 // Field represents a two-dimensional field of cells.
@@ -153,7 +157,7 @@ func (l *Life) Render() {
 	instrucX := titleX
 	instrucY := titleY + 2
 	for y, i := range instructions {
-		tbprint(instrucX, instrucY+y, boardColor, backgroundColor, i)
+		tbprint(instrucX, instrucY+y, textColor, backgroundColor, i)
 	}
 
 	pauseX := titleX
@@ -164,12 +168,12 @@ func (l *Life) Render() {
 		pauseMsg = "PAUSED"
 	}
 
-	tbprint(pauseX, pauseY, boardColor, backgroundColor, pauseMsg)
+	tbprint(pauseX, pauseY, textColor, backgroundColor, pauseMsg)
 
 	genX := titleX
 	genY := gameBorderRow + l.h - 1
 
-	tbprint(genX, genY, boardColor, backgroundColor, fmt.Sprintf("Generation: %d", l.generation))
+	tbprint(genX, genY, textColor, backgroundColor, fmt.Sprintf("Generation: %d", l.generation))
 
 	for y := 0; y < l.h; y++ {
 		for x := 0; x < l.w; x++ {
