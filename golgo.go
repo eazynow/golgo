@@ -10,8 +10,6 @@ import (
 )
 
 const (
-	title = "GAME OF LIFE"
-
 	gameBorderCol   = 2
 	gameBorderRow   = 1
 	textColor       = termbox.ColorWhite
@@ -19,6 +17,12 @@ const (
 	cellColor       = termbox.ColorWhite
 	boardColor      = termbox.ColorBlack
 )
+
+var titles = []string{
+	"Conways Game of Life",
+	"--------------------",
+	"eazynow 2016",
+}
 
 var instructions = []string{
 	"Controls:",
@@ -152,16 +156,18 @@ func (l *Life) Render() {
 
 	titleX := l.w + (gameBorderCol * 2)
 	titleY := gameBorderRow
-	tbprint(titleX, titleY, cellColor, boardColor, title)
+	for y, t := range titles {
+		tbprint(titleX, titleY+y, textColor, backgroundColor, t)
+	}
 
 	instrucX := titleX
-	instrucY := titleY + 2
+	instrucY := titleY + len(titles) + 2
 	for y, i := range instructions {
 		tbprint(instrucX, instrucY+y, textColor, backgroundColor, i)
 	}
 
 	pauseX := titleX
-	pauseY := instrucY + len(instructions) + 2
+	pauseY := gameBorderRow + l.h - 2
 
 	pauseMsg := "RUNNING"
 	if l.paused {
@@ -171,7 +177,7 @@ func (l *Life) Render() {
 	tbprint(pauseX, pauseY, textColor, backgroundColor, pauseMsg)
 
 	genX := titleX
-	genY := gameBorderRow + l.h - 1
+	genY := pauseY + 1
 
 	tbprint(genX, genY, textColor, backgroundColor, fmt.Sprintf("Generation: %d", l.generation))
 
