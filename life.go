@@ -101,22 +101,6 @@ func (l *Life) Close() {
 	termbox.Close()
 }
 
-// String returns the game board as a string.
-func (l *Life) String() string {
-	var buf bytes.Buffer
-	for y := 0; y < l.h; y++ {
-		for x := 0; x < l.w; x++ {
-			b := byte(' ')
-			if l.a.Alive(x, y) {
-				b = '*'
-			}
-			buf.WriteByte(b)
-		}
-		buf.WriteByte('\n')
-	}
-	return buf.String()
-}
-
 // Render renders the board in termbox
 func (l *Life) Render() {
 	termbox.Clear(backgroundColor, backgroundColor)
