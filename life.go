@@ -10,12 +10,19 @@ import (
 )
 
 const (
+	title = "GAME OF LIFE"
+
 	gameBorderCol   = 2
 	gameBorderRow   = 1
 	backgroundColor = termbox.ColorBlue
 	cellColor       = termbox.ColorWhite
 	boardColor      = termbox.ColorBlack
 )
+
+var instructions = []string{
+	"p    pause",
+	"q    quit",
+}
 
 // Field represents a two-dimensional field of cells.
 type Field struct {
@@ -68,9 +75,10 @@ func (f *Field) Next(x, y int) bool {
 
 // Life stores the state of a round of Conway's Game of Life.
 type Life struct {
-	a, b   *Field
-	w, h   int
-	paused bool
+	a, b       *Field
+	w, h       int
+	generation int
+	paused     bool
 }
 
 // NewLife returns a new Life game state with a random initial state.
@@ -87,7 +95,8 @@ func NewLife(w, h int) (*Life, error) {
 	return &Life{
 		a: a, b: NewField(w, h),
 		w: w, h: h,
-		paused: false,
+		generation: 1,
+		paused:     false,
 	}, nil
 }
 
@@ -101,6 +110,7 @@ func (l *Life) Step() {
 	}
 	// Swap fields a and b.
 	l.a, l.b = l.b, l.a
+	l.generation++
 }
 
 func (l *Life) Close() {
@@ -114,6 +124,31 @@ func (l *Life) Pause() {
 // Render renders the board in termbox
 func (l *Life) Render() {
 	termbox.Clear(backgroundColor, backgroundColor)
+
+	titleX := l.w + (gameBorderCol * 2)
+	titleY := gameBorderRow
+	tbprint(titleX, titleY, cellColor, boardColor, title)
+
+	instrucX := titleX
+	instrucY := titleY + 2
+	for y, i := range instructions {
+		tbprint(instrucX, instrucY+y, boardColor, backgroundColor, i)
+	}
+
+	pauseX := titleX
+	pauseY := instrucY + len(instructions) + 2
+
+	pauseMsg := "RUNNING"
+	if l.paused {
+		pauseMsg = "PAUSED"
+	}
+
+	tbprint(pauseX, pauseY, boardColor, backgroundColor, pauseMsg)
+
+	genX := titleX
+	genY := gameBorderRow + l.h - 1
+
+	tbprint(genX, genY, boardColor, backgroundColor, fmt.Sprintf("Generation: %d", l.generation))
 
 	for y := 0; y < l.h; y++ {
 		for x := 0; x < l.w; x++ {
@@ -158,9 +193,17 @@ func main() {
 		default:
 			if !l.paused {
 				l.Step()
-				l.Render()
 			}
+			l.Render()
 			time.Sleep(time.Second / 30)
 		}
+	}
+}
+
+// Function tbprint draws a string.
+func tbprint(x, y int, fg, bg termbox.Attribute, msg string) {
+	for _, c := range msg {
+		termbox.SetCell(x, y, c, fg, bg)
+		x++
 	}
 }
