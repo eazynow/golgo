@@ -63,8 +63,9 @@ func (f *Field) Next(x, y int) bool {
 
 // Life stores the state of a round of Conway's Game of Life.
 type Life struct {
-	a, b *Field
-	w, h int
+	a, b   *Field
+	w, h   int
+	paused bool
 }
 
 // NewLife returns a new Life game state with a random initial state.
@@ -81,6 +82,7 @@ func NewLife(w, h int) (*Life, error) {
 	return &Life{
 		a: a, b: NewField(w, h),
 		w: w, h: h,
+		paused: false,
 	}, nil
 }
 
@@ -98,6 +100,10 @@ func (l *Life) Step() {
 
 func (l *Life) Close() {
 	termbox.Close()
+}
+
+func (l *Life) Pause() {
+	l.paused = !l.paused
 }
 
 // Render renders the board in termbox
@@ -136,13 +142,17 @@ func main() {
 		case ev := <-eventQueue:
 			if ev.Type == termbox.EventKey {
 				switch {
+				case ev.Ch == 'p':
+					l.Pause()
 				case ev.Ch == 'q' || ev.Key == termbox.KeyEsc || ev.Key == termbox.KeyCtrlC || ev.Key == termbox.KeyCtrlD:
 					return
 				}
 			}
 		default:
-			l.Step()
-			l.Render()
+			if !l.paused {
+				l.Step()
+				l.Render()
+			}
 			time.Sleep(time.Second / 30)
 		}
 	}
